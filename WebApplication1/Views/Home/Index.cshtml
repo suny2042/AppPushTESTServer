@@ -1,0 +1,169 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+
+}
+
+<div class="text-center">
+    <h1 class="display-4">App Push TEST Server</h1>
+</div>
+
+<textarea id="txtMsg" class="form-control mb-2"></textarea>
+
+<div class="btn btn-primary" onclick="sendTokenToServer(ttt + '|' + encodeURIComponent($('#txtMsg').val()))">
+    웹 Send
+</div>
+
+<div class="btn btn-success" onclick="sendTokenToServer('egfj1WL1QFyGt0XhIbHNmb:APA91bEJcp2dmyaVXNeZgCfm45dcixMH0D5llfYybATKLcRrfsTGHQFmfz55tktdJKNrFXo4fRxLzJ4RnsmqxCm_zBum13b0OyhtoAm__2Qpq4MrBC4DcoeLZZjy1JoBPFDy7VQkNo65' + '|' + encodeURIComponent($('#txtMsg').val()))">
+    안드로이드 Send
+</div>
+
+
+<!-- 실행권한 요청 -->
+<script>
+        var isNotificationSupported = 'Notification' in window;
+    if (isNotificationSupported)
+    {
+        Notification.requestPermission().then(function (result)
+        {
+            if (result === 'granted')
+            {
+                console.log('[Notification] 허용: ', result);
+            }
+            else
+            {
+                console.log('[Notification] 차단: ', result);
+            }
+        });
+    }
+</script>
+
+<!-- FireBase -->
+<script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-messaging.js"></script>
+<script>
+    var ttt;
+
+    function initFirebase(serviceWorkRegistration)
+    {
+          //Firebase SDK 초기화
+          const firebaseConfig = {
+        apiKey: "AIzaSyDrfWKA4rzfpijAE9zlUfK0qAbcoIZfVZY",
+        authDomain: "test01-dbf80.firebaseapp.com",
+        projectId: "test01-dbf80",
+        storageBucket: "test01-dbf80.appspot.com",
+        messagingSenderId: "245931412328",
+        appId: "1:245931412328:web:59689405e3a324aa1fe4dd",
+        measurementId: "G-KZTYSF18F5"
+      };
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+
+      //Messaging 서비스 활성화
+      var messaging = firebase.messaging();
+      messaging.useServiceWorker(serviceWorkRegistration);
+      messaging.usePublicVapidKey("BK3uFfK7eTfkYxlwgAp8h3TM2hpgxvqTficnZP6SCyQmbCbtHBHQbzrbAc4LvIDG11mYd1aO6554e0TSSfIsWtQ");
+
+
+      // ~ Instance ID Token을 조회하여 서버로 전송 ~
+
+      //Instance ID Token 발급 요청
+    messaging.getToken()
+        .then((currentToken) =>
+        {
+            if (currentToken)
+            {
+                ttt = currentToken;
+                console.log('[InstanceID Token] 발행완료: ', currentToken);
+                //sendTokenToServer(currentToken); //Token을 서버로 전송
+            }
+            else
+            {
+                console.log('[InstanceID Token] 발행실패');
+                sendTokenToServer(null);
+            }
+        })
+        .catch((err) =>
+        {
+            console.log('[InstanceID Token] 발행오류: ', err);
+            sendTokenToServer(null);
+        });
+
+    //Instance ID Token 변경 시 호출되는 이벤트
+    messaging.onTokenRefresh(() =>
+    {
+        messaging.getToken().then((refreshedToken) =>
+        {
+            console.log('[InstanceID Token] 갱신완료', refreshedToken);
+            sendTokenToServer(refreshedToken); //Token을 서버로 전송
+        })
+        .catch((err) =>
+        {
+            console.log('[InstanceID Token] 갱신실패', err);
+            sendTokenToServer(null);
+        });
+    });
+
+    messaging.onMessage((payload) =>
+    {
+        //Push Message 수신 시 호출되는 이벤트
+        console.log('[PushMessage] 수신: ', payload);
+    });
+
+    }
+
+    //발급된 Instance ID Token을 서버에 전송
+function sendTokenToServer(token)
+{
+    return fetch('/api/save-token/',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: token
+        })
+        .then(function (response)
+        {
+            if (!response.ok)
+                console.log('[InstanceID Token] 서버전송 실패: ', response);
+            else
+                console.log('[InstanceID Token] 서버전송 완료: ', response);
+ 
+            //return response.json();
+            return response;
+        });
+        //.then(function (responseData)
+        //{
+        //    if (!(responseData && responseData.Success))
+        //        console.log('[InstanceID Token] 서버전송 응답(실패): ', responseData);
+        //    else
+        //        console.log('[InstanceID Token] 서버전송 응답(성공): ', responseData);
+        //});
+}
+
+
+</script>
+
+
+<!-- 서비스워커 등록 -->
+<script>
+        var isServiceWorkerSupported = 'serviceWorker' in navigator;
+    if (isServiceWorkerSupported)
+    {
+      //브라우저에 Service Worker를 등록
+      navigator.serviceWorker.register('service-worker.js', { scope: '/'})
+        .then(function(registration)
+        {
+           console.log('[ServiceWorker] 등록 성공: ', registration.scope);
+
+           //Firebase 초기화
+            initFirebase(registration);
+
+        })
+        .catch(function(err)
+        {
+           console.log('[ServiceWorker] 등록 실패: ', err);
+        });
+    }
+</script>
