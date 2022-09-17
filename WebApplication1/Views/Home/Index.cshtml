@@ -9,11 +9,11 @@
 
 <textarea id="txtMsg" class="form-control mb-2"></textarea>
 
-<div class="btn btn-primary" onclick="sendTokenToServer(ttt + '|' + encodeURIComponent($('#txtMsg').val()))">
+<div class="btn btn-primary" onclick="sendTokenToServer(mWebKey + '|' + encodeURIComponent($('#txtMsg').val()))">
     웹 Send
 </div>
 
-<div class="btn btn-success" onclick="sendTokenToServer('egfj1WL1QFyGt0XhIbHNmb:APA91bEJcp2dmyaVXNeZgCfm45dcixMH0D5llfYybATKLcRrfsTGHQFmfz55tktdJKNrFXo4fRxLzJ4RnsmqxCm_zBum13b0OyhtoAm__2Qpq4MrBC4DcoeLZZjy1JoBPFDy7VQkNo65' + '|' + encodeURIComponent($('#txtMsg').val()))">
+<div class="btn btn-success" onclick="sendTokenToServer(mAndroidKey + '|' + encodeURIComponent($('#txtMsg').val()))">
     안드로이드 Send
 </div>
 
@@ -42,7 +42,10 @@
 <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-analytics.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-messaging.js"></script>
 <script>
-    var ttt;
+    // 웹버전 FCM Key
+    var mWebKey;
+    // 안드로이드 FCM Key (TEST용으로써 현재는 해당 디바이스앱에서 부여받는 번호를 아래에 기입)
+    var mAndroidKey = 'dLXInwn6RzivTUxGg7DSky:APA91bHt7GyhI7CBeCJGXYUYL6LyI6M97yXkKqX7xHAQoHRYY7grBqR5_BPnZGvyilRSyniZMQjqX_hKRYdluZ9LTYmEtRXcOnLV9vdXAuK64Jxxli_1nmsckO-og_sDiFdqqJx2k8CJ';
 
     function initFirebase(serviceWorkRegistration)
     {
@@ -73,7 +76,7 @@
         {
             if (currentToken)
             {
-                ttt = currentToken;
+                    mWebKey = currentToken;
                 console.log('[InstanceID Token] 발행완료: ', currentToken);
                 //sendTokenToServer(currentToken); //Token을 서버로 전송
             }
